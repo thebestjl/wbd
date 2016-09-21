@@ -237,3 +237,24 @@ class TCurveTest(unittest.TestCase):
         myT = T.TCurve(self.nominalN)
         self.assertAlmostEquals(myT.f(1, 5), 0.578703704)
         
+# 500 integrate
+# Analysis
+#    inputs
+#        t -> numeric mandatory validated
+#        n -> numeric mandatory validated
+#        f -> function mandatory validated
+#    outputs
+#        float
+# Happy path
+#        nominal case: integral from 0..1 of f(x) = x is 0.5
+#        nominal case: integral from 0..1 of f(x) = x**4 is 0.2
+# Sad Path
+#           none ... everything is pre-validated
+    
+    def test500_010_ShouldIntegrateNominalF(self):
+        myT = T.TCurve(self.nominalN)
+        self.assertAlmostEquals(myT.integrate(1.0, self.nominalN, self.nominalF), 0.5, 3)
+        
+    def test500_020_ShouldIntegrateNominalF2(self):
+        myT = T.TCurve(self.nominalN)
+        self.assertAlmostEquals(myT.integrate(1.0, self.nominalN, self.nominalF2), 0.2, 3)
