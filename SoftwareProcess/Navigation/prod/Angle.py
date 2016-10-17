@@ -106,6 +106,3 @@ class Angle():
         while angle.minutes < 0:
             angle.minutes += 60.0
             angle.degrees -= 1
-    
-
-

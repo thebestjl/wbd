@@ -133,12 +133,27 @@ class Fix():
     
     def calculateAdjustedAltitude(self, observationStr, heightStr, 
                                   temperatureStr, pressureStr, horizonStr):
+        methodName = 'Fix.calculateAdjustedAltitude:  '
+        
         angle = Angle.Angle()
         angle.setDegreesAndMinutes(str(observationStr))
+        if (angle.getDegrees() >= 90.0):
+            raise ValueError(methodName + 'observation greater than 90 degrees.')
         
         height = float(heightStr)
+        if (height < 0):
+            raise ValueError(methodName + 'height less than 0.')
+        
         temperature = float(temperatureStr)
+        if (temperature < -20 or temperature > 120):
+            raise ValueError(methodName + 'temperature must be .GE. -20 and .LE. 120 degrees.')
+        
         pressure = float(pressureStr)
+        if (pressure < 100 or pressure > 1100):
+            raise ValueError(methodName + 'pressure must be .GE. 100 and .LE. 1100.')
+        
+        if (not(horizonStr == 'natural' or horizonStr == 'artificial')):
+            raise ValueError(methodName + 'horizon must be either \'natural\' or \'artificial\'.')
         
         if (horizonStr == 'natural'):
             dip = (-0.97 * Math.sqrt(height)) / 60
@@ -167,6 +182,7 @@ class Fix():
         temperature = temperature - 32
         temperature = temperature * float(5 / 9)
         return temperature
+    
     def handleNode(self, nodes):
         rc = []
         for node in nodes:
