@@ -1,14 +1,21 @@
 import xml.dom.minidom as minidom
 import Angle as Angle
 import math as Math
+import datetime as datetime
+import os.path as path
 
 class Fix():
     def __init__(self, logFile = 'log.txt'):
         methodName = 'Fix.__init__:  '
         if (type(logFile) is not str):           
             raise ValueError(methodName + 'logFile must be a string')
-        if (len(logFile) < 1):
-            raise ValueError(methodName + 'length of logFile must be > 1')
+        try:
+            ind = logFile.index('.')
+        except:
+            raise ValueError(methodName + 'logFile must be a string in the form file.ext')
+        
+        if (len(logFile[0:ind]) < 1):
+            raise ValueError(methodName + 'logFile must be a string in the form file.ext')
         
         self.logFile = logFile
         
@@ -16,8 +23,9 @@ class Fix():
             log = open(self.logFile, 'w')
         except:
             raise ValueError(methodName + 'logFile could not be opened.')
+
+        log.write('Log file:\t' + str(path.abspath(logFile)) + '\n')
         
-        log.write('Start of log')
         log.close()
         
     def setSightingFile(self, sightingFile = None):
@@ -61,13 +69,26 @@ class Fix():
         
         sightings = dom.getElementsByTagName('sighting')
         
+        logFile.write('Sighting file:\t' + str(path.abspath(self.sightingFile)) + '\n')
+        logFile.write('LOG:\t' + str(datetime.datetime.now()) \
+                      + str(datetime.datetime.utcoffset(datetime.datetime.now())) \
+                      + '\tStart of log\n')
+        
         for sighting in sightings:
             sightingString = self.handleSighting(sighting)
-            logFile.write(sightingString)
+            logFile.write('LOG:\t' + str(datetime.datetime.now()) \
+                          + str(datetime.datetime.utcoffset(datetime.datetime.now())) \
+                          + '\t' + sightingString + '\n')
             
         approximateLatitude = '0d0.0'
         approximateLongitude = '0d0.0'
         return (approximateLatitude, approximateLongitude)
+    
+    def setStarFile(self, starFile = None):
+        pass
+    
+    def setAriesFile(self, ariesFile = None):
+        pass
     
 # My Methods        
     
@@ -137,8 +158,11 @@ class Fix():
         
         angle = Angle.Angle()
         angle.setDegreesAndMinutes(str(observationStr))
+        
         if (angle.getDegrees() >= 90.0):
             raise ValueError(methodName + 'observation greater than 90 degrees.')
+        if (angle.getDegrees() < 0.1 / 60.0):
+            raise ValueError(methodName + 'observation less than 0.1 arc-minutes.')
         
         height = float(heightStr)
         if (height < 0):
@@ -155,13 +179,8 @@ class Fix():
         if (not(horizonStr == 'natural' or horizonStr == 'artificial')):
             raise ValueError(methodName + 'horizon must be either \'natural\' or \'artificial\'.')
         
-        if (horizonStr == 'natural'):
-            dip = (-0.97 * Math.sqrt(height)) / 60
-        else:
-            dip = 0
-            
-        refraction = (-0.00452 * pressure) / (273 + self.celsius(temperature)) \
-                        / self.tangent(angle.getDegrees())
+        dip = self.calculateDip(horizonStr, height)    
+        refraction = self.calculateRefraction(pressure, temperature, angle)
         
         dipAngle = Angle.Angle()
         dipAngle.setDegrees(dip)
@@ -173,6 +192,18 @@ class Fix():
         angle.add(refractionAngle)
         
         return angle.getString()
+    
+    def calculateRefraction(self, pressure, temperature, angle):
+        numerator = -0.00452 * pressure
+        denominator_1 = 273 + self.celsius(temperature)
+        denominator_2 = self.tangent(angle.getDegrees())
+        return numerator / denominator_1 / denominator_2
+    
+    def calculateDip(self, horizonStr, height):
+        if (horizonStr == 'natural'):
+            return (-0.97 * Math.sqrt(height)) / 60
+        else:
+            return 0
     
     def tangent(self, degrees):
         rads = degrees * Math.pi / 180.0
