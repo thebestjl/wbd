@@ -138,7 +138,7 @@ class FixTest(unittest.TestCase):
 #        Happy Path
 #            Nominal Case: returns a tuple consisting of the approximate location
 #        Sad Path
-#            Still to Do
+#            sightingFile, ariesFile, or starFile have not been set
 #
 #    Happy Path
     def test300_010_NominalCase(self):
@@ -148,7 +148,32 @@ class FixTest(unittest.TestCase):
         self.assertEquals(('0d0.0', '0d0.0'), fix.getSightings())
         
 #    Sad Path
-
+    def test300_910_ShouldRaiseExceptionWhenSightingFileNotSet(self):
+        fix = Fix.Fix()
+        fix.setAriesFile('aries.txt')
+        fix.setStarFile('stars.txt')
+        expectedDiag = self.className + 'getSightings:'
+        with self.assertRaises(ValueError) as context:
+            fix.getSightings()
+        self.assertEquals(expectedDiag, context.exception.args[0][0:len(expectedDiag)])
+        
+    def test300_920_ShouldRaiseExceptionWhenAriesFileNotSet(self):
+        fix = Fix.Fix()
+        fix.setSightingFile('sightings.xml')
+        fix.setStarFile('stars.txt')
+        expectedDiag = self.className + 'getSightings:'
+        with self.assertRaises(ValueError) as context:
+            fix.getSightings()
+        self.assertEquals(expectedDiag, context.exception.args[0][0:len(expectedDiag)])
+        
+    def test300_930_ShouldRaiseExceptionWhenStarFileNotSet(self):
+        fix = Fix.Fix()
+        fix.setSightingFile('sightings.xml')
+        fix.setAriesFile('aries.txt')
+        expectedDiag = self.className + 'getSightings:'
+        with self.assertRaises(ValueError) as context:
+            fix.getSightings()
+        self.assertEquals(expectedDiag, context.exception.args[0][0:len(expectedDiag)])
 #Acceptance Tests: 400
 #   Analysis -  setAriesFile
 #       inputs

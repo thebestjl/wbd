@@ -18,7 +18,7 @@ class Fix():
             raise ValueError(methodName + 'logFile must be a string in the form file.ext')
         
         self.logFile = logFile
-        
+        self.sightingFile = None
         try:
             log = open(self.logFile, 'w')
         except:
