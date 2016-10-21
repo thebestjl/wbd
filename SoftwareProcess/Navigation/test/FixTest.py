@@ -80,7 +80,7 @@ class FixTest(unittest.TestCase):
 #
 #    Happy Path
     def test200_010_ShouldReturnSightingFileString(self):
-        sightingFile = 'sight.xml'
+        sightingFile = str(path.abspath('sightings.xml'))
         fix = Fix.Fix()
         self.assertEquals(fix.setSightingFile(sightingFile), sightingFile)
         
@@ -142,9 +142,11 @@ class FixTest(unittest.TestCase):
 #
 #    Happy Path
     def test300_010_NominalCase(self):
-        sightingFile = 'sightings.xml'
-        fix = Fix.Fix()
+        sightingFile = 'sightingFile.xml'
+        fix = Fix.Fix('newlog.txt')
         fix.setSightingFile(sightingFile)
+        fix.setAriesFile('aries.txt')
+        fix.setStarFile('stars.txt')
         self.assertEquals(('0d0.0', '0d0.0'), fix.getSightings())
         
 #    Sad Path
@@ -243,31 +245,29 @@ class FixTest(unittest.TestCase):
         self.assertEquals(pathStr, fix.setStarFile('stars.txt'))
 #    Sad Path
     def test500_910_ShouldRaiseExceptionWhenFileLengthLTOne(self):
-        expectedDiag = self.className + 'setAriesFile:'
+        expectedDiag = self.className + 'setStarFile:'
         fix = Fix.Fix()
         with self.assertRaises(ValueError) as context:
             fix.setStarFile('.txt')
         self.assertEquals(expectedDiag, context.exception.args[0][0:len(expectedDiag)])
             
     def test500_920_ShouldRaiseExceptionWhenNoInput(self):
-        expectedDiag = self.className + 'setAriesFile:'
+        expectedDiag = self.className + 'setStarFile:'
         fix = Fix.Fix()
         with self.assertRaises(ValueError) as context:
             fix.setStarFile()
         self.assertEquals(expectedDiag, context.exception.args[0][0:len(expectedDiag)])
         
     def test500_930_ShouldRaiseExceptionWhenNotxtLiteral(self):
-        expectedDiag = self.className + 'setAriesFile:'
+        expectedDiag = self.className + 'setStarFile:'
         fix = Fix.Fix()
         with self.assertRaises(ValueError) as context:
             fix.setStarFile('aries')
         self.assertEquals(expectedDiag, context.exception.args[0][0:len(expectedDiag)])
         
     def test500_940_ShouldRaiseExceptionWhenFileCannotBeOpened(self):
-        expectedDiag = self.className + 'setAriesFile:'
+        expectedDiag = self.className + 'setStarFile:'
         fix = Fix.Fix()
         with self.assertRaises(ValueError) as context:
             fix.setStarFile('\.txt')
         self.assertEquals(expectedDiag, context.exception.args[0][0:len(expectedDiag)])
-
-        
