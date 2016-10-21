@@ -343,5 +343,30 @@ class Fix():
         else:
             return False
     
+    def parseAriesFile(self, date, hour):
+        aries = open(self.ariesFile, 'r')
+        ariesDate = ''
+        ariesHour = ''
+        ariesAngle = ''
+        
+        while ariesDate != date:
+            line = aries.readline().strip()
+            list = line.split('\t')
+            ariesDate = list[0]
+            ariesHour = list[1]
+            ariesAngle = list[2]
+            
+        while (ariesHour < hour and ariesDate == date):
+            line = aries.readline().strip()
+            list = line.split('\t')
+            if (list[0] == date and ariesHour < list[1] and list[1] < hour):
+                ariesHour = list[1]
+                ariesAngle = list[2]
+        
+        aries.close()
+        return ariesAngle
     
+    def parseStarFile(self, starStr):
+        starList = starStr.strip().split('\t')
+        star = open(self.starFile, 'r')
         
