@@ -79,7 +79,7 @@ class FixTest(unittest.TestCase):
 #            sightingFile doesn't have '.xml' as literal file extension
 #
 #    Happy Path
-    def test200_010_ShouldReturnSightingFileString(self):
+    def test200_010_ShouldReturnSightingFilePath(self):
         sightingFile = str(path.abspath('sightings.xml'))
         fix = Fix.Fix()
         self.assertEquals(fix.setSightingFile(sightingFile), sightingFile)

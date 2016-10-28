@@ -3,7 +3,6 @@ import Angle as Angle
 import math as Math
 import datetime as datetime
 import os.path as path
-from test.test_readline import readline
 
 class Fix():
     def __init__(self, logFile = 'log.txt'):
@@ -25,6 +24,7 @@ class Fix():
         self.sightingFile = None
         self.ariesFile = None
         self.starFile = None
+        self.error_count = 0
         
         try:
             log = open(self.logFile, 'w')
@@ -142,14 +142,11 @@ class Fix():
         
         sightings = dom.getElementsByTagName('sighting')
         
-        logFile.write('LOG:\t' + str(datetime.datetime.now()) \
-                      + str(datetime.datetime.utcoffset(datetime.datetime.now())) \
-                      + '\tStart of log\n')
-        
         all_sightings = []
         for sighting in sightings:
             (sightingDate, sightingTime, sightingString) = self.handleSighting(sighting)
-            all_sightings.append((sightingDate, sightingTime, sightingString))
+            if (not(sightingDate == None or sightingTime == None or sightingString == None)):
+                all_sightings.append((sightingDate, sightingTime, sightingString))
             
         self.sortSightings(all_sightings)
         
@@ -157,6 +154,10 @@ class Fix():
             logFile.write('LOG:\t' + str(datetime.datetime.now()) \
                           + str(datetime.datetime.utcoffset(datetime.datetime.now())) \
                           + '\t' + sighting[2] + '\n')
+            
+        logFile.write('LOG:\t' + str(datetime.datetime.now()) \
+                      + str(datetime.datetime.utcoffset(datetime.datetime.now())) \
+                      + '\tSighting errors:\t' + str(self.error_count))
             
         approximateLatitude = '0d0.0'
         approximateLongitude = '0d0.0'
@@ -224,7 +225,23 @@ class Fix():
         retStr = bodyStr + '\t' + dateStr + '\t' + timeStr + '\t' + \
                 observationStr + '\t' + adjAltStr
         
-        return (dateStr, timeStr, retStr)
+        (geoLat, SHA) = self.parseStarFile(retStr)
+        GHA = self.parseAriesFile(retStr)
+        
+        if (geoLat == None or SHA == None or GHA == None):
+            self.error_count += 1
+            return (None, None, None)
+        else:
+            ang_1 = Angle.Angle()
+            ang_2 = Angle.Angle()
+            ang_1.setDegreesAndMinutes(GHA)
+            print SHA
+            ang_2.setDegreesAndMinutes(SHA)
+            ang_1.add(ang_2)
+            geoLong = ang_1.getString()
+            retStr += '\t' + geoLat + '\t' + geoLong
+        
+            return (dateStr, timeStr, retStr)
     
     def calculateAdjustedAltitude(self, observationStr, heightStr, 
                                   temperatureStr, pressureStr, horizonStr):
@@ -343,30 +360,91 @@ class Fix():
         else:
             return False
     
-    def parseAriesFile(self, date, hour):
+    def parseAriesFile(self, starStr):
+        lst = starStr.split('\t')
+        date_lst = lst[1].split('-')
+        date_year = date_lst[0][2:]
+        date_month = date_lst[1]
+        date_day = date_lst[2]
+
+        ind = lst[2].index(':')
+        hour = int(lst[2][0 : ind])
+        lst2 = lst[2].split(':')
+        seconds = float(lst2[2])
         aries = open(self.ariesFile, 'r')
-        ariesDate = ''
-        ariesHour = ''
-        ariesAngle = ''
+        ariesAngle_1 = 0
+        ariesAngle_2 = ''
+        break_out = False
+        for line in aries.readlines():
+            lst = line.split('\t')
+            date_lst_2 = lst[0].split('/')
+            dy = date_lst_2[2]
+            dm = date_lst_2[0]
+            dd = date_lst_2[1]
+            if break_out:
+                ariesAngle_2 = lst[2].strip()
+                break
+            if dy == date_year and date_month == dm and date_day == dd:
+                if int(lst[1]) == hour: 
+                    ariesAngle_1 = lst[2].strip()
+                    print ariesAngle_1
+                    break_out = True
         
-        while ariesDate != date:
-            line = aries.readline().strip()
-            list = line.split('\t')
-            ariesDate = list[0]
-            ariesHour = list[1]
-            ariesAngle = list[2]
-            
-        while (ariesHour < hour and ariesDate == date):
-            line = aries.readline().strip()
-            list = line.split('\t')
-            if (list[0] == date and ariesHour < list[1] and list[1] < hour):
-                ariesHour = list[1]
-                ariesAngle = list[2]
+        print ariesAngle_1
+        ang_1 = Angle.Angle()
+        ang_2 = Angle.Angle()
+        ang_3 = Angle.Angle()
         
+        ang_1.setDegreesAndMinutes(ariesAngle_1)
+        ang_2.setDegreesAndMinutes(ariesAngle_2)
+        
+        ang_2.subtract(ang_1)
+        temp = seconds / 3600 * ang_2.getDegrees()
+        ang_3.setDegrees(temp)
+        
+        ang_1.add(ang_3)
+        
+        ariesAngle = ang_1.getString()
+
         aries.close()
         return ariesAngle
     
     def parseStarFile(self, starStr):
         starList = starStr.strip().split('\t')
         star = open(self.starFile, 'r')
+        starBody = starList[0].strip()
+        star_lst = starList[1].split('-')
+        starYear = star_lst[2][2:]
+        starMonth = star_lst[0]
+        starDay = star_lst[1]
+        sy = ''
+        sm = ''
+        sd = ''
+        starLat = None
+        starLong = None
+        for line in star.readlines():
+            line = line.strip()
+            if len(line) < 1:
+                return (None, None)
+            lst = line.split('\t')
+            date_lst_2 = lst[1].split('/')
+            dy = date_lst_2[2]
+            dm = date_lst_2[0]
+            dd = date_lst_2[1]
+            if lst[0].lower().strip() == starBody.lower():
+                if dy <= starYear and dm <= starMonth and dd <= starDay:
+                    if dy > sy and dm > sm and dd > sd:
+                        print 1
+                        sy = dy
+                        sm = dm
+                        sd = dd
+                        starLat = lst[2]
+                        starLong = lst[3]
+                        print lst
+
+        star.close()    
+        return (starLat, starLong)
+    
+    def calculateGeographicLongitude(self, starStr):
+        pass
         

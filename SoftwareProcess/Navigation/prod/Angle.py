@@ -19,8 +19,23 @@ class Angle():
         methodName = 'Angle.setDegreesAndMinutes:  '
         if (type(angleString) is not str):
             raise ValueError(methodName + 'angleString must be of type str.')
+        if (len(angleString) < 1):
+            
+            raise ValueError(methodName + 'angleString cannot be empty.')
+        try:
+            ind2 = angleString.index('.')
+            if (len(angleString[ind2 : ]) > 2):
+                self.degrees = 0
+                self.minutes = 0
+                raise TypeError(methodName + 'angleString format must be #d#.#')
+        except TypeError:
+            raise ValueError(methodName + 'angleString format must be #d#.#')
+        except ValueError:
+            pass
+        
         try:
             ind = angleString.index('d')
+
             self.degrees = int(angleString[ : ind])
             self.minutes = float(angleString[ind + 1 : ])
             
@@ -39,6 +54,7 @@ class Angle():
         except:
             self.degrees = 0
             self.minutes = 0
+            print angleString
             raise ValueError(methodName + 'angleString format must be #d#.#')
     
     def add(self, angle = None):
@@ -106,3 +122,4 @@ class Angle():
         while angle.minutes < 0:
             angle.minutes += 60.0
             angle.degrees -= 1
+
