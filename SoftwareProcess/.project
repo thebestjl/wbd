@@ -14,4 +14,21 @@
 	<natures>
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>Navigation/prod/Angle.py</name>
+			<type>1</type>
+			<location>C:/Users/jdl00/git/SoftwareProccess/SoftwareProcess/Navigation/prod/Angle.py</location>
+		</link>
+		<link>
+			<name>Navigation/prod/TCurve.py</name>
+			<type>1</type>
+			<location>C:/Users/jdl00/git/SoftwareProccess/SoftwareProcess/Navigation/prod/TCurve.py</location>
+		</link>
+		<link>
+			<name>Navigation/test/TCurveTest.py</name>
+			<type>1</type>
+			<location>C:/Users/jdl00/git/SoftwareProccess/SoftwareProcess/Navigation/test/TCurveTest.py</location>
+		</link>
+	</linkedResources>
 </projectDescription>
