@@ -223,22 +223,21 @@ class Fix():
                     heightStr, temperatureStr, pressureStr, horizonStr)
         
         retStr = bodyStr + '\t' + dateStr + '\t' + timeStr + '\t' + \
-                observationStr + '\t' + adjAltStr
+                adjAltStr
         
-        (geoLat, SHA) = self.parseStarFile(retStr)
+        (geoLong, SHA) = self.parseStarFile(retStr)
         GHA = self.parseAriesFile(retStr)
-        
-        if (geoLat == None or SHA == None or GHA == None):
+        if (geoLong == None or SHA == None or GHA == None):
             self.error_count += 1
             return (None, None, None)
         else:
             ang_1 = Angle.Angle()
             ang_2 = Angle.Angle()
+            print GHA
             ang_1.setDegreesAndMinutes(GHA)
-            print SHA
             ang_2.setDegreesAndMinutes(SHA)
             ang_1.add(ang_2)
-            geoLong = ang_1.getString()
+            geoLat = ang_1.getString()
             retStr += '\t' + geoLat + '\t' + geoLong
         
             return (dateStr, timeStr, retStr)
@@ -372,8 +371,8 @@ class Fix():
         lst2 = lst[2].split(':')
         seconds = float(lst2[2])
         aries = open(self.ariesFile, 'r')
-        ariesAngle_1 = 0
-        ariesAngle_2 = ''
+        ariesAngle_1 = '0d0.0'
+        ariesAngle_2 = '0d0.0'
         break_out = False
         for line in aries.readlines():
             lst = line.split('\t')
@@ -387,16 +386,20 @@ class Fix():
             if dy == date_year and date_month == dm and date_day == dd:
                 if int(lst[1]) == hour: 
                     ariesAngle_1 = lst[2].strip()
-                    print ariesAngle_1
                     break_out = True
+
+        ariesAngle = self.calculateGHA(ariesAngle_1, ariesAngle_2, seconds)
         
-        print ariesAngle_1
+        aries.close()
+        return ariesAngle
+    
+    def calculateGHA(self, angle_1, angle_2, seconds):
         ang_1 = Angle.Angle()
         ang_2 = Angle.Angle()
         ang_3 = Angle.Angle()
         
-        ang_1.setDegreesAndMinutes(ariesAngle_1)
-        ang_2.setDegreesAndMinutes(ariesAngle_2)
+        ang_1.setDegreesAndMinutes(angle_1)
+        ang_2.setDegreesAndMinutes(angle_2)
         
         ang_2.subtract(ang_1)
         temp = seconds / 3600 * ang_2.getDegrees()
@@ -405,8 +408,6 @@ class Fix():
         ang_1.add(ang_3)
         
         ariesAngle = ang_1.getString()
-
-        aries.close()
         return ariesAngle
     
     def parseStarFile(self, starStr):
@@ -417,34 +418,32 @@ class Fix():
         starYear = star_lst[2][2:]
         starMonth = star_lst[0]
         starDay = star_lst[1]
-        sy = ''
-        sm = ''
-        sd = ''
+        sy = '0'
+        sm = '0'
+        sd = '0'
         starLat = None
         starLong = None
+        b = False
         for line in star.readlines():
             line = line.strip()
-            if len(line) < 1:
-                return (None, None)
             lst = line.split('\t')
             date_lst_2 = lst[1].split('/')
             dy = date_lst_2[2]
             dm = date_lst_2[0]
             dd = date_lst_2[1]
             if lst[0].lower().strip() == starBody.lower():
+                if not(b):
+                    starLat = lst[2]
+                    starLong = lst[3]
+                    b = True
                 if dy <= starYear and dm <= starMonth and dd <= starDay:
                     if dy > sy and dm > sm and dd > sd:
-                        print 1
                         sy = dy
                         sm = dm
                         sd = dd
                         starLat = lst[2]
                         starLong = lst[3]
-                        print lst
 
         star.close()    
         return (starLat, starLong)
-    
-    def calculateGeographicLongitude(self, starStr):
-        pass
         

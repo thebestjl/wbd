@@ -103,7 +103,16 @@ class Angle():
             return -1
     
     def getString(self):
-        return str(self.degrees) + 'd' + str('{:2.1f}'.format(self.minutes))
+        degreeStr = str(self.degrees) + 'd'
+        minuteString = str('{:02.1f}'.format(self.minutes))
+        try:
+           ind = minuteString.index('.')
+           if len(minuteString[:ind]) < 2:
+               minuteString = '0' + minuteString
+        except:
+            if len(minuteString < 2):
+                minuteString = '0' + minuteString
+        return degreeStr + minuteString
     
     def getDegrees(self):
         deg = float(self.degrees + (self.minutes / 60.0))
